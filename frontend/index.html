@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Freshness Detection - AI Quality Inspector</title>
+    <!-- FontAwesome & Chart.js CDNs -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="badge-ticker">
+                <span class="badge-pulse"></span>
+                <span>XGBoost ML Pipeline Online</span>
+            </div>
+            <h1>Fruit Freshness Detection System</h1>
+            <p>Automated computer vision & multi-feature ML analysis to classify fruit quality, detect spoilage, and provide storage guidance.</p>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <main class="dashboard-grid">
+            <!-- Left Panel: Upload & Input Controls -->
+            <section class="glass-card">
+                <h2 class="card-title">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    Image Input Selector
+                </h2>
+
+                <!-- Drag and Drop Zone -->
+                <div class="dropzone" id="dropzone">
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                    <i class="fa-solid fa-file-image dropzone-icon"></i>
+                    <div class="dropzone-text">Drag & drop your fruit image here</div>
+                    <div class="dropzone-hint">Supports JPG, PNG, WEBP files</div>
+                </div>
+
+                <!-- Input Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="selectFileBtn">
+                        <i class="fa-solid fa-folder-open"></i>
+                        Browse Files
+                    </button>
+                    <button class="btn btn-secondary" id="cameraBtn">
+                        <i class="fa-solid fa-camera"></i>
+                        Use Camera
+                    </button>
+                </div>
+
+                <!-- Preset Samples Section -->
+                <div class="presets-section">
+                    <div class="presets-label">Quick Test Presets</div>
+                    <div class="preset-chips" id="sampleChips">
+                        <!-- Populated dynamically via app.js -->
+                        <span class="dropzone-hint">Loading samples...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Results & Classification -->
+            <section class="glass-card" style="position: relative;" id="resultsCard">
+                <!-- Loading Overlay -->
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="spinner"></div>
+                    <p style="font-weight: 600;">Extracting 651 Features...</p>
+                    <span style="font-size: 0.85rem; color: #94a3b8; margin-top: 4px;">Running XGBoost Classifier</span>
+                </div>
+
+                <h2 class="card-title">
+                    <i class="fa-solid fa-microscope"></i>
+                    Analysis Results
+                </h2>
+
+                <!-- Image Preview Box -->
+                <div class="preview-container" id="previewContainer">
+                    <div class="preview-placeholder" id="previewPlaceholder">
+                        <i class="fa-solid fa-apple-whole"></i>
+                        <p>Upload an image to see detection results</p>
+                    </div>
+                    <img id="previewImg" class="preview-img" style="display: none;" alt="Fruit Preview">
+                </div>
+
+                <!-- Status Banner -->
+                <div class="status-banner fresh" id="statusBanner">
+                    <div class="status-info">
+                        <h3 id="statusTitle">Awaiting Input</h3>
+                        <p id="statusSubtitle">Select an image to analyze freshness</p>
+                    </div>
+                    <div class="confidence-gauge">
+                        <div class="confidence-value" id="confidenceVal">--%</div>
+                        <div class="confidence-label">Confidence</div>
+                    </div>
+                </div>
+
+                <!-- Details Grid -->
+                <div class="details-list">
+                    <div class="detail-item">
+                        <div class="label">Detected Fruit</div>
+                        <div class="value" id="detailFruit">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">Freshness State</div>
+                        <div class="value" id="detailState">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">Model Architecture</div>
+                        <div class="value" id="detailModel">XGBoost</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">Inference Time</div>
+                        <div class="value" id="detailTime">--</div>
+                    </div>
+                </div>
+
+                <!-- Storage Advice Box -->
+                <div class="advice-box">
+                    <h4 id="adviceTitle">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        Storage & Consumption Guidelines
+                    </h4>
+                    <p id="adviceText">Upload or capture an image to receive tailored fresh storage advice and safety recommendations.</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Lower Section: Analytics & Feature Breakdown -->
+        <section class="charts-section">
+            <div class="glass-card">
+                <h2 class="card-title">
+                    <i class="fa-solid fa-chart-column"></i>
+                    Class Probabilities Distribution
+                </h2>
+                <div class="chart-container">
+                    <canvas id="probabilityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h2 class="card-title">
+                    <i class="fa-solid fa-palette"></i>
+                    Color & HSV Feature Breakdown
+                </h2>
+                <div class="chart-container">
+                    <canvas id="metricsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Fruit Freshness Detection System &copy; 2026 | Powered by OpenCV, Scikit-Image & XGBoost</p>
+        </footer>
+    </div>
+
+    <!-- Live Camera Modal -->
+    <div class="modal" id="cameraModal">
+        <div class="modal-content">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.4rem;">Live Camera Inspector</h3>
+            <video id="webcamVideo" class="video-preview" autoplay playsinline></video>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-primary" id="captureBtn">
+                    <i class="fa-solid fa-camera"></i> Capture & Predict
+                </button>
+                <button class="btn btn-secondary" id="closeCameraBtn">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
